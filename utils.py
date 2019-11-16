@@ -1,12 +1,13 @@
-import torch
-import torchvision
-from torch.utils import data
 import os
 import cv2
 import csv
-import numpy as np
 import shutil
+import numpy as np
 from random import randint, shuffle
+
+import torch
+import torchvision
+from torch.utils import data
 
 class Dataset(data.Dataset):
     def __init__(self, dirs, resize=64, scale_by=4, also_valid=False):

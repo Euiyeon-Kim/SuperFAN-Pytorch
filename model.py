@@ -1,6 +1,5 @@
-import torch.nn as nn
 import torch
-
+import torch.nn as nn
 
 class Generator(nn.Module):
     def __init__(self, scale_by=4):
@@ -150,4 +149,3 @@ class upsample(nn.Module):
         self.upsample = torch.nn.UpsamplingBilinear2d([256, 256])
 
     def forward(self, input):
-        return (self.upsample(input) + 1.) / 2

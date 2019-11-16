@@ -1,19 +1,20 @@
-from __future__ import print_function
 import os
+import cv2
 import torch
-from torch.utils.model_zoo import load_url
+import numpy as np
 from enum import Enum
 from skimage import io
 from skimage import color
-import numpy as np
-import cv2
+
 try:
     import urllib.request as request_file
 except BaseException:
     import urllib as request_file
 
-from .model import FAN, ResNetDepth
+from torch.utils.model_zoo import load_url
+
 from .utils import *
+from .model import FAN, ResNetDepth
 
 
 class LandmarksType(Enum):
