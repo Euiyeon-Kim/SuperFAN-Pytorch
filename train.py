@@ -175,8 +175,8 @@ def train(train_directories, epoch):
                 sr = generator(lr)
 
                 # for evaluating images
-                mse, ssim, psnr = eval(gt.data.cpu().numpy(), sr.data.cpu().numpy())
-                total_mse += mse / len(loaded_valid_data)
+                MSE, ssim, psnr = eval(gt.data.cpu().numpy(), sr.data.cpu().numpy())
+                total_mse += MSE / len(loaded_valid_data)
                 total_ssim += ssim / len(loaded_valid_data)
                 total_psnr += psnr / len(loaded_valid_data)
 
