@@ -11,7 +11,7 @@ train:
   # Learning rate setting
   start_decay: 60
   start_lr: 2.5e-4
-  final_lr: 1e-5
+  final_lr: 1.0e-5
 
 test:
   
