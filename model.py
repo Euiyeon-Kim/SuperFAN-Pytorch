@@ -149,3 +149,4 @@ class upsample(nn.Module):
         self.upsample = torch.nn.UpsamplingBilinear2d([256, 256])
 
     def forward(self, input):
+        return (self.upsample(input) + 1.) / 2
