@@ -5,7 +5,7 @@ save_dir : "./models"
 
 train:
   epochs: 70
-  batch_size: 4
+  batch_size: 16
   num_FAN_modules: 2
   num_workers: 12
   # Learning rate setting
