@@ -264,7 +264,7 @@ def compute_gradient_penalty(D, real_samples, fake_samples):
 
 def eval(gt, pred):
     '''
-    image input is (BS, C, H, W)
+        Input size : (BS, C, H, W)
     '''
 
     gt = (gt + 1.) * 127.5

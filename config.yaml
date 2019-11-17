@@ -11,8 +11,12 @@ train:
   # Learning rate setting
   start_decay: 60
   start_lr: 2.5e-4
-  final_lr: 1e-5
-
+  final_lr: 1.e-5
+  # Lambda
+  lambda_vgg: 0.006
+  lambda_adv: 0.001
+  lambda_penalty: 10.0
+  
 test:
   
 

@@ -67,7 +67,7 @@ def train(train_directories, epoch):
     dataset = Dataset(train_directories, also_valid=True)
     loaded_training_data = DataLoader(
         dataset=dataset, batch_size=batch_size,
-        shuffle=True, num_workers=12
+        shuffle=True, num_workers=train_conf['num_workers']
     )
     valid_dataset = dataset.clone_for_validation()
     loaded_valid_data = DataLoader(dataset=valid_dataset, batch_size=1)
@@ -78,7 +78,7 @@ def train(train_directories, epoch):
     preprocess_for_FAN = upsample().cuda()
     generator = Generator().cuda()
     discriminator = Discriminator().cuda()
-    mse = nn.MSELoss().cuda()
+    MSE_loss = nn.MSELoss().cuda()
 
     if os.path.exists(save_path_G):
         generator.load_state_dict(torch.load(save_path_G))
@@ -115,21 +115,21 @@ def train(train_directories, epoch):
             G_optimizer.zero_grad()
 
             # vgg loss
-            mse_loss = mse(sr, gt)
+            mse_loss = MSE_loss(sr, gt)
             sr_vgg = vgg_feature(sr)
             gt_vgg = vgg_feature(gt)
-            vgg_loss = mse(sr_vgg, gt_vgg) * 0.006
+            vgg_loss = MSE_loss(sr_vgg, gt_vgg) * train_conf['lambda_vgg']
 
             sr_FAN = FAN(preprocess_for_FAN(sr))[-1]
             gt_FAN = FAN(preprocess_for_FAN(gt))[-1].detach()
 
-            FAN_loss = mse(sr_FAN, gt_FAN)
+            FAN_loss = MSE_loss(sr_FAN, gt_FAN)
 
             g_loss = mse_loss + vgg_loss + FAN_loss
             if epoch >= D_start:
                 fake_logit = discriminator(sr).mean()
                 G_adv_loss = - fake_logit
-                g_loss += G_adv_loss * 1e-3
+                g_loss += G_adv_loss * train_conf['lambda_adv']
 
             g_loss.backward()
             G_optimizer.step()
@@ -144,11 +144,10 @@ def train(train_directories, epoch):
                 real_logit = discriminator(gt).mean()
 
                 gradient_penalty = compute_gradient_penalty(discriminator, gt, sr)
-                d_loss = fake_logit - real_logit + 10. * gradient_penalty
+                d_loss = fake_logit - real_logit + train_conf['lambda_penalty'] * gradient_penalty
 
                 d_loss.backward()
                 D_optimizer.step()
-
 
             if i % 10 == 0:
                 print("loss at %d : %d ==>\tmse: %.6f  vgg: %.6f  FAN: %.6f" % (epoch, i, mse_loss, vgg_loss, FAN_loss))
@@ -164,7 +163,8 @@ def train(train_directories, epoch):
 
         if epoch % 1 == 0:
             validation = os.path.join(project_dir, 'validation', str(epoch))
-            os.makedirs(validation)
+            if not os.path.isdir(validation):
+                os.makedirs(validation)
 
             total_mse = 0
             total_ssim =0
@@ -174,13 +174,13 @@ def train(train_directories, epoch):
                 lr, gt, img_name = val_data
                 sr = generator(lr)
 
-                # for evaluating images
+                # Evaluate images
                 mse, ssim, psnr = eval(gt.data.cpu().numpy(), sr.data.cpu().numpy())
                 total_mse += mse / len(loaded_valid_data)
                 total_ssim += ssim / len(loaded_valid_data)
                 total_psnr += psnr / len(loaded_valid_data)
 
-                # for saving images
+                # Save images
                 sr = sr[0]
                 sr = renormalization(sr)
                 sr = sr.cpu().detach().numpy()
@@ -190,12 +190,12 @@ def train(train_directories, epoch):
                 filename = os.path.join(validation, img_name + '.png')
                 cv2.imwrite(filename=filename, img=sr)
 
-            # save logs
+            # Save logs
             summary_writer.add_scalar('valid/mse', total_mse, epoch)
             summary_writer.add_scalar('valid/ssim', total_ssim, epoch)
             summary_writer.add_scalar('valid/psnr', total_psnr, epoch)
 
-            # save checkpoints
+            # Save checkpoints
             torch.save(generator.state_dict(), save_path_G)
             # torch.save(discriminator.state_dict(), save_path_D)
 
